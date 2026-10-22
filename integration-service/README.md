@@ -10,6 +10,7 @@ Producción: <https://mi-asistente-garmin.vercel.app>
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
 | GET | `/api/health` | No | `{ "ok": true }` |
+| GET | `/api/setup` | No | Guía de configuración en HTML (la abre el QR del reloj) |
 | POST | `/api/ask` | `Bearer DEVICE_TOKEN` | `{ q, tasks?, notes? }` → `{ answer }` (≤ 300 caracteres) |
 | POST | `/api/ask-audio?tasks=a\|b&notes=x` | `Bearer DEVICE_TOKEN` | Cuerpo: audio Ogg/Opus o WAV → `{ transcript, answer }` |
 

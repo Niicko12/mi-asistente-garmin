@@ -20,6 +20,7 @@ class MainDelegate extends WatchUi.BehaviorDelegate {
         menu.addItem(new WatchUi.MenuItem(Rez.Strings.MenuJapanese, null, :japanese, null));
         menu.addItem(new WatchUi.MenuItem(Rez.Strings.MenuStatus, null, :status, null));
         menu.addItem(new WatchUi.MenuItem(Rez.Strings.MenuDiagnostics, null, :diagnostics, null));
+        menu.addItem(new WatchUi.MenuItem(Rez.Strings.MenuSetup, null, :setup, null));
         WatchUi.pushView(menu, new MainMenuDelegate(_view), WatchUi.SLIDE_UP);
         return true;
     }

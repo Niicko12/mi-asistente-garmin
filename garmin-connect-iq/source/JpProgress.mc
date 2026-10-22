@@ -81,9 +81,10 @@ module JpProgress {
                 pending++;
             }
         }
-        return "Racha: " + currentStreak() + " días\n"
+        var streak = currentStreak();
+        return "Racha: " + streak + (streak == 1 ? " día\n" : " días\n")
             + "Aciertos: " + ok + " de " + total + " (" + pct + "%)\n"
-            + "Para repasar: " + pending + " palabras";
+            + "Para repasar: " + pending + (pending == 1 ? " tarjeta" : " tarjetas");
     }
 
     function currentStreak() as Number {

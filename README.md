@@ -25,7 +25,8 @@ palabra de activación ni se conecta con él.
 | **Responde en voz alta** | La respuesta suena por el altavoz del reloj, por frases, mientras la boca se anima. |
 | **Datos del reloj** | Cada pregunta lleva batería, pasos, calorías, distancia, pisos, minutos de intensidad, pulso actual y en reposo, Body Battery, estrés, SpO2, respiración, recuperación, VO2máx, horario de sueño, clima y amanecer/atardecer. |
 | **Tareas y notas** | Se guardan en el reloj; las notas usan plantillas o el teclado. Las pendientes viajan como contexto. |
-| **Japonés N5** | Tarjetas con lectura, romaji, significado y pronunciación; quiz de 3 opciones que repite lo que fallas; quiz de hiragana; racha de días. |
+| **Japonés N5** | Tarjetas con lectura, romaji, significado y pronunciación; quiz de 3 opciones que repite lo que fallas; quiz de hiragana; racha de días. Los verbos van en forma cortés ます y se traducen conjugados: たべます = «como (comer)». |
+| **Configurar (QR)** | El menú muestra un QR que abre en el iPhone la guía de configuración ([/api/setup](https://mi-asistente-garmin.vercel.app/api/setup)). |
 | **Estados visuales** | Ojos estilo Monki: disponible, escuchando, pensando, hablando, sin conexión y error. |
 
 <p align="center">
@@ -62,7 +63,7 @@ mi-asistente-garmin/
 ├── garmin-connect-iq/          app del reloj (Monkey C)
 │   ├── manifest.xml
 │   ├── Secrets.mc.example      plantilla de URL y token (Secrets.mc no se versiona)
-│   ├── resources/              textos, icono y fuente japonesa
+│   ├── resources/              textos, icono, QR de configuración y fuente japonesa
 │   └── source/
 │       ├── ListenView.mc       escuchar ▶ enviar ▶ responder
 │       ├── AnswerPanel.mc      respuesta con texto partido para pantalla redonda
@@ -71,11 +72,13 @@ mi-asistente-garmin/
 │       ├── WatchData.mc        datos del reloj que viajan con cada pregunta
 │       ├── EyesRenderer.mc     cara estilo Monki
 │       ├── Jp*.mc, JapaneseDeck.mc   práctica de japonés
+│       ├── SetupQrView.mc      QR de la guía de configuración
 │       └── Theme.mc            colores compartidos
 ├── integration-service/        backend en Vercel (Node.js + TypeScript)
 │   ├── api/ask.ts              pregunta escrita
 │   ├── api/ask-audio.ts        pregunta hablada
 │   ├── api/speak.ts            voz por partes
+│   ├── api/setup.ts            guía de configuración (página HTML, sin token)
 │   └── lib/                    proveedores de IA, voz y codificador Ogg/Opus
 ├── tools/
 │   ├── mtp_send.py             instalar en el reloj por MTP
@@ -139,6 +142,18 @@ resuelve la ruta `GARMIN/Apps`.
 
 - Asignar Mi Asistente a un acceso directo (Ajustes → Sistema → Teclas de acceso rápido) para abrirla y hablar al instante.
 - En la app: toca para terminar de hablar o para preguntar otra vez; UP/DOWN desplaza respuestas largas.
+- Menú → **Configurar (QR)**: escanéalo con el iPhone para abrir la guía de configuración.
+
+<p align="center">
+  <img src="docs/setup-qr.png" width="160" alt="QR que abre la guía de configuración en mi-asistente-garmin.vercel.app/api/setup">
+</p>
+
+Para regenerar el QR si cambia la URL (requiere `pip install segno`):
+
+```bash
+python3 -c "import segno; q=segno.make('https://mi-asistente-garmin.vercel.app/api/setup', error='m'); \
+q.save('garmin-connect-iq/resources/drawables/setup_qr.png', scale=7, border=2); q.save('docs/setup-qr.png', scale=10, border=4)"
+```
 
 ## Limitaciones conocidas
 
@@ -146,6 +161,18 @@ resuelve la ruta `GARMIN/Apps`.
 - **Puntaje de sueño:** solo lo pueden leer las carátulas (`ComplicationSubscriber`), no las apps.
 - **Edge TTS** es un servicio no oficial de Microsoft; si deja de funcionar, la voz depende de Gemini o de Google Cloud TTS (`GOOGLE_TTS_API_KEY`).
 - Las preguntas necesitan el iPhone cerca con Garmin Connect.
+- Si el asistente responde algo en japonés, lo escribe en romaji y la voz en español lo pronuncia mal.
+
+## Antes de publicar en Connect IQ Store
+
+La app es de uso personal. Para publicarla (gratis o de pago) falta:
+
+- **Un token por usuario** o validar la compra con la API de licencias de Garmin: hoy `DEVICE_TOKEN` es único y va dentro de la app.
+- **Límite de preguntas por usuario**: cada pregunta consume las claves de IA del backend.
+- **Quitar Edge TTS**, que es un servicio no oficial.
+- **Política de privacidad**: la app envía audio y datos de salud.
+- **Más modelos** en `manifest.xml` (solo compila para `fenix847mm`).
+- Cuenta en el Garmin Developer Program y pagos de Connect IQ disponibles en el país.
 
 ## Documentación
 

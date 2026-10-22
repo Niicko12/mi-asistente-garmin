@@ -20,6 +20,10 @@
     <string id="MenuJapanese">Japonés</string>
     <string id="MenuStatus">Estado</string>
     <string id="MenuDiagnostics">Diagnóstico</string>
+    <string id="MenuSetup">Configurar (QR)</string>
+
+    <string id="SetupTitle">CONFIGURAR</string>
+    <string id="SetupHint">Escanéalo con el iPhone</string>
 
     <string id="AskTitle">Preguntar</string>
     <string id="AskVoice">Hablar</string>
@@ -52,10 +56,10 @@
     <string id="JpQuiz">Quiz</string>
     <string id="JpQuizSub">Elige el significado</string>
     <string id="JpKana">Hiragana</string>
-    <string id="JpKanaSub">Las 46 letras</string>
+    <string id="JpKanaSub">Los 46 caracteres básicos</string>
     <string id="JpProgress">Progreso</string>
     <string id="JpStreak">Racha de días:</string>
-    <string id="JpItems">palabras</string>
+    <string id="JpItems">tarjetas</string>
     <string id="JpHintReveal">toca: ver</string>
     <string id="JpHintListen">toca: escuchar</string>
     <string id="JpHintNext">Toca: siguiente</string>

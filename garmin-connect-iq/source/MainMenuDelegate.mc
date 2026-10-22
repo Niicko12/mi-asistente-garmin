@@ -27,6 +27,8 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             Nav.pushText(Rez.Strings.StatusTitle, statusBody());
         } else if (id == :diagnostics) {
             Nav.pushText(Rez.Strings.MenuDiagnostics, Diagnostics.report());
+        } else if (id == :setup) {
+            WatchUi.pushView(new SetupQrView(), new WatchUi.BehaviorDelegate(), WatchUi.SLIDE_LEFT);
         }
     }
 
