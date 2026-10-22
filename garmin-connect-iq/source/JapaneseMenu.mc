@@ -34,8 +34,7 @@ module JapaneseMenu {
     }
 
     function openQuiz(category as Number) as Void {
-        var view = new JpQuizView(category);
-        WatchUi.pushView(view, new JpQuizDelegate(view), WatchUi.SLIDE_LEFT);
+        JpQuizMenu.open(category);
     }
 }
 

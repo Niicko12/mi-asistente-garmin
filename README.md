@@ -34,10 +34,10 @@ el asistente de la Anbernic RG353V.
   <img src="docs/capturas/04-menu.png" width="180" alt="Menú principal">
   <img src="docs/capturas/05-japones-tarjeta.png" width="180" alt="Tarjeta de japonés sin voltear">
   <img src="docs/capturas/06-japones-revelada.png" width="180" alt="Tarjeta volteada con lectura, romaji y significado">
-  <img src="docs/capturas/07-japones-quiz.png" width="180" alt="Quiz de vocabulario con la opción seleccionada en cian">
+  <img src="docs/capturas/07-japones-quiz.png" width="180" alt="Quiz de vocabulario: la palabra en japonés y tres opciones">
 </p>
 <p align="center">
-  <img src="docs/capturas/08-hiragana-quiz.png" width="180" alt="Quiz de hiragana con la respuesta correcta en verde">
+  <img src="docs/capturas/08-hiragana-quiz.png" width="180" alt="Resultado del quiz: incorrecto, con la respuesta correcta y la elegida">
   <img src="docs/capturas/09-diagnostico.png" width="180" alt="Pantalla de diagnóstico de capacidades">
   <img src="docs/capturas/10-panel-qr.png" width="180" alt="QR del panel y código de enlace de 6 dígitos">
 </p>
@@ -165,7 +165,7 @@ La app se instala al desconectar el cable.
 - **Acceso rápido:** asigna Mi Asistente a una tecla (Ajustes → Sistema → Teclas de acceso rápido) para preguntar al instante.
 - **Preguntar:** habla al abrir la app; un toque termina la grabación o inicia otra pregunta. UP/DOWN desplaza respuestas largas.
 - **Panel:** Menú → Configurar (QR) y escanea el QR con el iPhone: el panel se abre enlazado. Los cambios llegan al reloj al abrir su menú.
-- **Quiz de japonés:** toca una opción, o muévete con UP/DOWN y confirma con START.
+- **Quiz de japonés:** toca una opción, o muévete con UP/DOWN y confirma con START. La pantalla de resultado muestra la respuesta correcta; un toque pasa a la siguiente.
 
 <p align="center">
   <img src="docs/setup-qr.png" width="160" alt="QR del panel: mi-asistente-garmin.vercel.app/api/setup">

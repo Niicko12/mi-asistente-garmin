@@ -11,19 +11,6 @@ function quizCorrectOption(logger as Logger) as Boolean {
     return true;
 }
 
-(:test)
-function quizRowHitTest(logger as Logger) as Boolean {
-    var tops = [222, 270, 318] as Array<Number>;
-    var h = 42;
-    Test.assertEqual(JpQuiz.rowAt(240, tops, h), 0);
-    Test.assertEqual(JpQuiz.rowAt(266, tops, h), 0); // hueco: más cerca de la 1.ª
-    Test.assertEqual(JpQuiz.rowAt(268, tops, h), 1);
-    Test.assertEqual(JpQuiz.rowAt(330, tops, h), 2);
-    Test.assertEqual(JpQuiz.rowAt(150, tops, h), -1);
-    Test.assertEqual(JpQuiz.rowAt(400, tops, h), -1);
-    return true;
-}
-
 // Cada palabra del mazo: la opción correcta se acepta en cualquier posición.
 (:test)
 function quizEveryItemValidates(logger as Logger) as Boolean {
@@ -59,38 +46,13 @@ function customCardsDisplay(logger as Logger) as Boolean {
     return true;
 }
 
-// La vista real: se dibuja en un bitmap del tamaño de la pantalla y se toca
-// el centro de la fila correcta en cada pregunta de cada categoría.
-(:test)
-function quizViewTapCorrectRow(logger as Logger) as Boolean {
-    var bitmap = Graphics.createBufferedBitmap({ :width => 454, :height => 454 }).get() as Graphics.BufferedBitmap;
-    var dc = bitmap.getDc();
-    for (var cat = 0; cat <= JapaneseDeck.KANA; cat++) {
-        var view = new JpQuizView(cat);
-        view.onShow();
-        for (var round = 0; round < 15; round++) {
-            view.onUpdate(dc);
-            var options = view.currentOptions();
-            var correct = options.indexOf(view.currentItem());
-            Test.assert(correct >= 0);
-            view.tapAt(view.rowCenter(correct));
-            if (!view.wasRight()) {
-                logger.debug("falló cat " + cat + " item " + view.currentItem());
-                return false;
-            }
-            view.onUpdate(dc);
-            view.tapAt(view.rowCenter(0));
-        }
-    }
-    return true;
-}
 
 // Un significado cortado ("Buenos días...") deja dos opciones iguales a la
-// vista: todos deben caber completos en su fila.
+// vista: todos deben caber completos en las dos líneas de su opción.
 (:test)
 function quizLabelsFit(logger as Logger) as Boolean {
     var dc = (Graphics.createBufferedBitmap({ :width => 454, :height => 454 }).get() as Graphics.BufferedBitmap).getDc();
-    var max = 454 * JpQuiz.ROW_PERCENT / 100 - JpQuiz.ROW_PADDING;
+    var max = JpQuiz.MAX_LABEL_PX;
     var ok = true;
     for (var i = 0; i < JapaneseDeck.ITEMS.size(); i++) {
         var label = JapaneseDeck.category(i) == JapaneseDeck.KANA ? JapaneseDeck.romaji(i) : JapaneseDeck.meaning(i);
@@ -100,4 +62,30 @@ function quizLabelsFit(logger as Logger) as Boolean {
         }
     }
     return ok;
+}
+
+// Cada categoría: elegir la opción correcta acierta y una distinta falla,
+// sea cual sea su posición en el menú.
+(:test)
+function quizRoundAnswers(logger as Logger) as Boolean {
+    for (var cat = 0; cat <= JapaneseDeck.KANA; cat++) {
+        var round = new JpQuizRound(cat);
+        for (var n = 0; n < 15; n++) {
+            var correct = round.options.indexOf(round.item);
+            Test.assert(correct >= 0);
+            Test.assertEqual(round.options.size(), 3);
+            var wrong = (correct + 1) % round.options.size();
+            if (n % 2 == 0) {
+                round.answer(correct);
+                Test.assert(round.right);
+            } else {
+                round.answer(wrong);
+                Test.assert(!round.right);
+            }
+            round.answer(correct);  // una segunda elección no cambia el resultado
+            Test.assertEqual(round.right, n % 2 == 0);
+            round.next();
+        }
+    }
+    return true;
 }

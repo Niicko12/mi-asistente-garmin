@@ -64,7 +64,8 @@
     <string id="JpItems">tarjetas</string>
     <string id="JpHintReveal">toca: ver</string>
     <string id="JpHintListen">toca: escuchar</string>
-    <string id="JpHintNext">Toca o START: siguiente</string>
+    <string id="JpHintNext">Toca: siguiente</string>
+    <string id="JpYouChose">Elegiste:</string>
     <string id="JpRight">¡Correcto!</string>
     <string id="JpWrong">Incorrecto</string>
 
