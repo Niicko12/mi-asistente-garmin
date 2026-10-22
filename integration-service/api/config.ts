@@ -11,8 +11,10 @@
 //   addQuestion { text } · removeQuestion { id }
 //   addProject { title, last, next } · removeProject { id }
 //   fillCard { text }: la IA completa lectura, romaji y significado.
+//   ask { q } → { answer }: pregunta al asistente desde el teléfono, con las
+//   tareas y notas pendientes de la bandeja como contexto.
 
-import { authorized, generate, json } from "../lib/assistant.js";
+import { answer, authorized, clean, generate, json } from "../lib/assistant.js";
 import {
   KEY_NAMES,
   MAX_CARDS,
@@ -68,6 +70,17 @@ export async function POST(request: Request): Promise<Response> {
   }
   const text = (key: string, max = MAX_TEXT) =>
     typeof body[key] === "string" ? (body[key] as string).trim().slice(0, max) : "";
+
+  if (body.action === "ask") {
+    const q = text("q", 500);
+    if (!q) return json({ error: "pregunta vacía" }, 400);
+    const config = await loadConfig();
+    const reply = await answer(
+      { tasks: config.inbox.tasks.map((t) => t.text), notes: config.inbox.notes.map((n) => n.text) },
+      q,
+    );
+    return reply ? json({ answer: clean(reply) }) : json({ error: "el asistente no respondió" }, 502);
+  }
 
   if (body.action === "fillCard") {
     const card = await fillCard(text("text", 40));

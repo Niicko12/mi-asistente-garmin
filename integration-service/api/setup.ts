@@ -1,9 +1,10 @@
 // GET /api/setup — panel y guía para el teléfono; lo abre el QR del reloj.
-// La página no lleva datos. Se enlaza con el código de 6 dígitos que muestra
-// el reloj bajo el QR (/api/pair) o con DEVICE_TOKEN; la sesión queda en el
-// navegador y la página habla con /api/config. Desde aquí se agregan tareas,
-// notas, preguntas rápidas, proyectos y tarjetas de japonés, y se ponen las
-// claves de IA.
+// La página no lleva datos. El QR del reloj trae el código de enlace en el
+// fragmento (#c=123456) y la página lo canjea sola en /api/pair; también se
+// puede escribir el código o usar DEVICE_TOKEN. La sesión queda en el
+// navegador y la página habla con /api/config. Desde aquí se pregunta al
+// asistente, se agregan tareas, notas, preguntas rápidas, proyectos y
+// tarjetas de japonés, y se ponen las claves de IA.
 
 const PAGE = `<!doctype html>
 <html lang="es">
@@ -59,7 +60,7 @@ const PAGE = `<!doctype html>
 
   <section id="login" class="stack">
     <h2>1. Enlazar con el reloj</h2>
-    <p class="sub">En el reloj: menú → <b>Configurar (QR)</b>. Escribe el código de 6 dígitos que aparece bajo el QR.</p>
+    <p class="sub">En el reloj: menú → <b>Configurar (QR)</b> y escanea el QR: el teléfono se enlaza solo. También puedes escribir el código de 6 dígitos que aparece debajo.</p>
     <input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" aria-label="Código del reloj">
     <button id="pair">Enlazar</button>
     <details>
@@ -73,6 +74,16 @@ const PAGE = `<!doctype html>
   <section id="linked" hidden>
     <span>✓ Enlazado con el reloj</span>
     <button id="logout" class="ghost small">Salir</button>
+  </section>
+
+  <section class="needs stack">
+    <h2>Preguntar al asistente</h2>
+    <p class="sub">Responde con tus tareas y notas pendientes como contexto.</p>
+    <div class="row"><input id="q" maxlength="500" placeholder="¿Qué tengo pendiente hoy?"><button id="ask">Preguntar</button></div>
+    <div id="answerBox" class="stack" hidden>
+      <p id="answer"></p>
+      <button id="saveAnswer" class="ghost small">Guardar en el reloj como nota</button>
+    </div>
   </section>
 
   <section class="needs stack">
@@ -232,6 +243,18 @@ $("pair").onclick = async () => {
     load();
   } catch (e) { say(e.message, true); }
 };
+$("ask").onclick = async () => {
+  const q = $("q").value.trim();
+  if (!q) return;
+  $("ask").disabled = true; say("Pensando...");
+  try {
+    const { answer } = await call("/api/config", "POST", { action: "ask", q });
+    $("answer").textContent = answer; $("answerBox").hidden = false; say("");
+  } catch (e) { say(e.message, true); }
+  $("ask").disabled = false;
+};
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter") $("ask").click(); });
+$("saveAnswer").onclick = () => act({ action: "addNote", text: $("answer").textContent.slice(0, 120) }, "Nota enviada al reloj");
 $("code").addEventListener("input", () => { if ($("code").value.replace(/\\D/g, "").length === 6) $("pair").click(); });
 $("enter").onclick = () => { remember($("token").value.trim()); clear(["token"]); load(); };
 $("logout").onclick = logout;
@@ -262,7 +285,15 @@ $("addCard").onclick = async () => {
   const card = Object.fromEntries(["jp", "reading", "romaji", "meaning"].map((k) => [k, $(k).value.trim()]));
   if (await act({ action: "addCard", ...card }, "Tarjeta guardada")) clear(["seed", "jp", "reading", "romaji", "meaning"]);
 };
-load();
+// Enlace directo desde el QR del reloj: #c=123456.
+const fromQr = /^#c=(\\d{6})$/.exec(location.hash);
+if (fromQr) {
+  history.replaceState(null, "", location.pathname);
+  $("code").value = fromQr[1];
+  $("pair").click();
+} else {
+  load();
+}
 </script>
 </body>
 </html>`;

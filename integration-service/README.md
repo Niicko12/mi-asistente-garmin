@@ -12,8 +12,9 @@ Producción: <https://mi-asistente-garmin.vercel.app>
 | GET | `/api/health` | No | `{ "ok": true }` |
 | GET | `/api/setup` | No | Panel y guía en HTML (lo abre el QR del reloj); pide el token y usa `/api/config` |
 | POST | `/api/pair` | `Bearer DEVICE_TOKEN` (reloj) / ninguna (panel) | Reloj: `{ code }` de 6 dígitos, 10 min y 5 intentos. Panel: `{ code }` → `{ session }` |
+| GET | `/api/qr?c=123456` | No | PNG con el QR de `/api/setup#c=123456`; el panel canjea el código al abrirse |
 | GET | `/api/config` | `Bearer DEVICE_TOKEN` o sesión | Estado del panel: claves (solo origen y últimos 4 caracteres), bandeja y tarjetas |
-| POST | `/api/config` | `Bearer DEVICE_TOKEN` o sesión | `{ action, ... }`: `setKey`, `clearKey`, `addTask`, `addNote`, `removeInbox`, `addCard`, `removeCard`, `addQuestion`, `removeQuestion`, `addProject`, `removeProject`, `fillCard` |
+| POST | `/api/config` | `Bearer DEVICE_TOKEN` o sesión | `{ action, ... }`: `setKey`, `clearKey`, `addTask`, `addNote`, `removeInbox`, `addCard`, `removeCard`, `addQuestion`, `removeQuestion`, `addProject`, `removeProject`, `fillCard`, `ask` |
 | GET | `/api/sync` | `Bearer DEVICE_TOKEN` | El reloj recoge `{ tasks: [[id, texto]], notes, cards: [[id, jp, lectura, romaji, significado]], questions: [texto], projects: [[nombre, último, siguiente]] }` |
 | POST | `/api/sync` | `Bearer DEVICE_TOKEN` | `{ tasks: [id], notes: [id] }`: confirma lo guardado y lo quita de la bandeja |
 | POST | `/api/ask` | `Bearer DEVICE_TOKEN` | `{ q, tasks?, notes? }` → `{ answer }` (≤ 300 caracteres) |

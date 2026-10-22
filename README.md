@@ -27,7 +27,7 @@ el asistente de la Anbernic RG353V.
 | **Tareas y notas** | Se guardan en el reloj, con plantillas o teclado, y acompañan cada pregunta como contexto. |
 | **Preguntas rápidas y proyectos** | Accesos directos a preguntas frecuentes y seguimiento de proyectos (último avance y siguiente paso). |
 | **Japonés N5** | Tarjetas con lectura, romaji, significado y pronunciación; quiz de tres opciones que prioriza lo que fallas; quiz de hiragana; racha diaria. Los verbos se presentan en forma cortés ます con su traducción conjugada (たべます = «como (comer)»). |
-| **Panel en el teléfono** | Menú → Configurar (QR): se escanea el QR y se enlaza con el código de 6 dígitos que muestra el reloj. Desde el panel se agregan tareas, notas, preguntas rápidas, proyectos y tarjetas de japonés (la IA completa lectura, romaji y significado), y se administran las claves de IA. |
+| **Panel en el teléfono** | Menú → Configurar (QR): al escanear el QR del reloj, el teléfono abre el panel ya enlazado. Desde el panel se pregunta al asistente (y la respuesta puede guardarse como nota en el reloj), se agregan tareas, notas, preguntas rápidas, proyectos y tarjetas de japonés (la IA completa lectura, romaji y significado), y se administran las claves de IA. |
 | **Estados visuales** | Ojos animados para disponible, escuchando, pensando, hablando, sin conexión y error. |
 
 <p align="center">
@@ -57,7 +57,7 @@ iPhone (navegador) ──HTTPS──▶ /api/setup (panel) ──▶ /api/config
 ```
 
 - **Seguridad:** las claves de IA nunca se guardan en el reloj; el reloj se identifica con un token de dispositivo. Las claves que se cargan desde el panel se almacenan cifradas (AES-256-GCM) en un Blob privado y tienen prioridad sobre las variables de entorno.
-- **Enlace del panel:** el reloj solicita un código de 6 dígitos (válido 10 minutos y 5 intentos) que el teléfono canjea por una sesión. El token del dispositivo no se escribe en el teléfono.
+- **Enlace del panel:** el reloj solicita un código de un solo uso (válido 10 minutos y 5 intentos) y descarga un QR que lo incluye; al escanearlo, el teléfono lo canjea por una sesión. El código también se muestra para escribirlo a mano. El token del dispositivo nunca se escribe en el teléfono.
 - **Alta disponibilidad:** cada servicio tiene proveedores de respaldo en cadena; un proveedor sin cuota se omite temporalmente.
 - **Voz por partes:** la respuesta se divide en frases y el reloj solicita la siguiente mientras reproduce la actual, para mantener cada transferencia ligera.
 - **Sincronización:** al abrir el menú, el reloj recoge lo agregado en el panel (`/api/sync`) y confirma lo guardado.
@@ -91,6 +91,7 @@ mi-asistente-garmin/
 │   ├── api/speak.ts            voz por partes
 │   ├── api/setup.ts            panel web para el teléfono
 │   ├── api/pair.ts             código de enlace del panel
+│   ├── api/qr.ts               QR con el código de enlace
 │   ├── api/config.ts           API del panel
 │   ├── api/sync.ts             sincronización con el reloj
 │   └── lib/                    proveedores de IA y voz, configuración y codificador Ogg/Opus
@@ -163,7 +164,7 @@ La app se instala al desconectar el cable.
 
 - **Acceso rápido:** asigna Mi Asistente a una tecla (Ajustes → Sistema → Teclas de acceso rápido) para preguntar al instante.
 - **Preguntar:** habla al abrir la app; un toque termina la grabación o inicia otra pregunta. UP/DOWN desplaza respuestas largas.
-- **Panel:** Menú → Configurar (QR). Escanea el QR con el iPhone y escribe el código de 6 dígitos. El teléfono queda enlazado y los cambios llegan al reloj al abrir su menú.
+- **Panel:** Menú → Configurar (QR) y escanea el QR con el iPhone: el panel se abre enlazado. Los cambios llegan al reloj al abrir su menú.
 - **Quiz de japonés:** toca una opción, o muévete con UP/DOWN y confirma con START.
 
 <p align="center">
