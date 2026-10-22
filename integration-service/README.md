@@ -33,16 +33,16 @@ Errores: `401 unauthorized`, `400 invalid request`, `500 server not configured`
 | `GEMINI_MODEL` | No | Por defecto `gemini-flash-latest` |
 | `NVIDIA_MODEL` | No | Por defecto `nvidia/nemotron-3.5-lightning-30b-a3b` |
 | `GROQ_MODEL` / `GROQ_STT_MODEL` | No | Por defecto `openai/gpt-oss-120b` / `whisper-large-v3-turbo` |
-| `BLOB_READ_WRITE_TOKEN` | Para el panel | La crea `vercel blob create-store mi-asistente-config --access private`; sin ella el panel es de solo lectura |
+| `BLOB_READ_WRITE_TOKEN` | Para el panel | Se crea con `vercel blob create-store mi-asistente-config --access private` |
 
 Las claves de IA (`GROQ_API_KEY`, `GEMINI_API_KEY`, `NVIDIA_API_KEY`,
 `GOOGLE_TTS_API_KEY`) también se pueden poner desde el panel. Se guardan
 cifradas en `config/settings.json` del Blob privado, con una clave derivada
 de `DEVICE_TOKEN`, y tienen prioridad sobre las variables de entorno. Al
-rotar `DEVICE_TOKEN` hay que volver a ponerlas en el panel.
+rotar `DEVICE_TOKEN` deben volver a cargarse desde el panel.
 
 ```bash
-vercel env add GEMINI_API_KEY production   # pide el valor; no lo pegues en chats
+vercel env add GEMINI_API_KEY production   # solicita el valor de forma interactiva
 vercel deploy --prod
 ```
 
