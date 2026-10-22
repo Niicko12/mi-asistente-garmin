@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
+    <iq:application id="0a642f2893ea4b21869c8be0363c48f4" type="watch-app" name="@Strings.AppName" entry="MiAsistenteApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="6.0.3">
+        <iq:products>
+            <!-- Ajustar a la variante exacta del fēnix 8 (Fase 1, tarea 1) -->
+            <iq:product id="fenix847mm"/>
+        </iq:products>
+        <iq:permissions>
+            <iq:uses-permission id="AudioInput"/>
+            <iq:uses-permission id="AudioOutput"/>
+            <iq:uses-permission id="Communications"/>
+            <iq:uses-permission id="SensorHistory"/>
+            <iq:uses-permission id="UserProfile"/>
+        </iq:permissions>
+        <iq:languages>
+            <iq:language>spa</iq:language>
+        </iq:languages>
+        <iq:barrels/>
+    </iq:application>
+</iq:manifest>

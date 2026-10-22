@@ -1,0 +1,16 @@
+bin/
+gen/
+*.prg
+*.iq
+*.der
+*.pem
+.env
+.DS_Store
+.device_token
+integration-service/.vercel/
+garmin-connect-iq/source/Secrets.mc
+node_modules/
+.env*
+integration-service/.env.local
+# Fuente original (9 MB): se descarga para regenerar la fuente japonesa; ver tools/
+tools/fonts/*.ttf

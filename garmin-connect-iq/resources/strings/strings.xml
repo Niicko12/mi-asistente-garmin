@@ -1,0 +1,73 @@
+<strings>
+    <string id="AppName">Mi Asistente</string>
+
+    <string id="StateAvailable">Estoy aquí</string>
+    <string id="StateThinking">Pensando...</string>
+    <string id="StateOffline">Sin conexión</string>
+    <string id="StateError">Algo falló</string>
+    <string id="StateListening">Te escucho...</string>
+    <string id="StateSpeaking">Hablando...</string>
+
+    <string id="HintMenu">Toca: menú</string>
+    <string id="HintState">Desliza: estado</string>
+    <string id="DemoBadge">MODO LOCAL</string>
+
+    <string id="MenuTitle">Mi Asistente</string>
+    <string id="MenuAsk">Preguntar</string>
+    <string id="MenuNote">Notas</string>
+    <string id="MenuTasks">Tareas</string>
+    <string id="MenuProjects">Proyectos</string>
+    <string id="MenuJapanese">Japonés</string>
+    <string id="MenuStatus">Estado</string>
+    <string id="MenuDiagnostics">Diagnóstico</string>
+
+    <string id="AskTitle">Preguntar</string>
+    <string id="AskVoice">Hablar</string>
+    <string id="AskWrite">Escribir pregunta</string>
+    <string id="ErrMic">No pude usar el micrófono.</string>
+    <string id="ErrNotHeard">No te escuché. Toca para intentarlo otra vez.</string>
+    <string id="HintStopListening">Toca para terminar</string>
+    <string id="HintAskAgain">Toca: otra vez</string>
+    <string id="SpeechError">Voz: error</string>
+    <string id="ErrNoPhone">Sin conexión con el teléfono. Abre Garmin Connect y acerca el iPhone.</string>
+    <string id="ErrAuth">Token no válido. Revisa Secrets.mc y DEVICE_TOKEN.</string>
+    <string id="ErrGeneric">No pude obtener respuesta</string>
+
+    <string id="NoteTitle">Notas</string>
+    <string id="NewNote">+ Nueva nota</string>
+    <string id="WriteNote">Escribir</string>
+    <string id="TplIdea">Idea: </string>
+    <string id="TplTodo">Hacer: </string>
+    <string id="TplRemember">Recordar: </string>
+    <string id="DeleteNote">¿Borrar nota?</string>
+
+    <string id="TasksTitle">Tareas</string>
+    <string id="NewTask">+ Nueva tarea</string>
+    <string id="PurgeDone">Borrar hechas</string>
+    <string id="TaskDone">Hecha</string>
+    <string id="TaskPending">Pendiente</string>
+
+    <string id="JpCards">Tarjetas</string>
+    <string id="JpCardsSub">Ver, voltear y escuchar</string>
+    <string id="JpQuiz">Quiz</string>
+    <string id="JpQuizSub">Elige el significado</string>
+    <string id="JpKana">Hiragana</string>
+    <string id="JpKanaSub">Las 46 letras</string>
+    <string id="JpProgress">Progreso</string>
+    <string id="JpStreak">Racha de días:</string>
+    <string id="JpItems">palabras</string>
+    <string id="JpHintReveal">toca: ver</string>
+    <string id="JpHintListen">toca: escuchar</string>
+    <string id="JpHintNext">Toca: siguiente</string>
+
+    <string id="ProjectsTitle">Proyectos</string>
+    <string id="NextStep">Siguiente</string>
+    <string id="LastUpdate">Último</string>
+
+    <string id="StatusTitle">Estado</string>
+    <string id="PhoneConnected">Teléfono: conectado</string>
+    <string id="PhoneDisconnected">Teléfono: desconectado</string>
+    <string id="DataSource">Datos: locales</string>
+    <string id="SyncStatus">IA: Groq · NVIDIA · Gemini</string>
+
+</strings>

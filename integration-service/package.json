@@ -1,0 +1,18 @@
+{
+  "name": "mi-asistente-integration",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "@google/genai": "^2.30.0",
+    "mpg123-decoder": "^1.0.3",
+    "msedge-tts": "^2.1.0",
+    "opusscript": "^0.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
