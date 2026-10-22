@@ -3,9 +3,14 @@ import Toybox.Lang;
 import Toybox.System;
 import Toybox.WatchUi;
 
-// Quiz de tres opciones. UP/DOWN mueve la selección y START responde; en
-// pantalla táctil se puede tocar la opción. Tras responder, los ojos
-// reaccionan, se pronuncia la palabra y otro toque pasa a la siguiente.
+// Quiz de tres opciones. Botones: UP/DOWN mueve la selección (resaltada en
+// cian) y START responde. Pantalla: tocar una opción la responde. Tras
+// responder, se marca correcto/incorrecto, se pronuncia la palabra y START
+// o un toque pasa a la siguiente.
+//
+// Los botones se leen con onKey y no con onSelect/onNextPage: en el reloj un
+// toque también puede llegar como onSelect, que respondía la opción
+// resaltada en vez de la tocada.
 class JpQuizView extends WatchUi.View {
 
     const OPTIONS = 3;
@@ -23,9 +28,6 @@ class JpQuizView extends WatchUi.View {
     private var _speech as SpeechPlayer;
     private var _optionTops as Array<Number> = [] as Array<Number>;
     private var _optionH as Number = 0;
-    // Momento de la última respuesta por toque: algunos relojes envían
-    // también onSelect tras el toque y saltaría a la siguiente palabra.
-    private var _tapAnsweredAt as Number = 0;
 
     function initialize(category as Number) {
         View.initialize();
@@ -91,6 +93,7 @@ class JpQuizView extends WatchUi.View {
         }
         _answered = true;
         _right = JpQuiz.isCorrect(_options, _selected, _item);
+        System.println("quiz respuesta fila=" + _selected + " item=" + _item + " opciones=" + _options + " ok=" + _right);
         _count++;
         if (_right) {
             _score++;
@@ -109,18 +112,37 @@ class JpQuizView extends WatchUi.View {
             return;
         }
         var row = JpQuiz.rowAt(y, _optionTops, _optionH);
+        System.println("quiz tap y=" + y + " fila=" + row);
         if (row >= 0) {
             _selected = row;
             primaryAction();
-            _tapAnsweredAt = System.getTimer();
         }
     }
 
-    function selectPressed() as Void {
-        if (System.getTimer() - _tapAnsweredAt < 400) {
-            return;
+    // onSelect sin coordenadas (toque convertido por el sistema): solo
+    // avanza tras responder; nunca responde a ciegas.
+    function selectWithoutTarget() as Void {
+        System.println("quiz onSelect respondida=" + _answered);
+        if (_answered) {
+            next();
         }
-        primaryAction();
+    }
+
+    // Para las pruebas: la pregunta actual, sus opciones y el resultado.
+    function currentItem() as Number {
+        return _item;
+    }
+
+    function currentOptions() as Array<Number> {
+        return _options;
+    }
+
+    function rowCenter(i as Number) as Number {
+        return _optionTops[i] + _optionH / 2;
+    }
+
+    function wasRight() as Boolean {
+        return _right;
     }
 
     // En hiragana se responde con romaji; en palabras, con el significado.
@@ -166,7 +188,7 @@ class JpQuizView extends WatchUi.View {
         var optFont = Graphics.FONT_XTINY;
         _optionH = dc.getFontHeight(optFont) + 12;
         var top = h * 49 / 100;
-        var rowW = w * 68 / 100;
+        var rowW = w * JpQuiz.ROW_PERCENT / 100;
         _optionTops = [] as Array<Number>;
         for (var i = 0; i < _options.size(); i++) {
             var y = top + i * (_optionH + 6);
@@ -178,7 +200,8 @@ class JpQuizView extends WatchUi.View {
             } else if (_answered && i == _selected) {
                 fill = Theme.WRONG;
             } else if (!_answered && i == _selected) {
-                fill = Theme.SURFACE_SELECTED;
+                fill = EyesRenderer.COLOR_EYE;
+                text = Graphics.COLOR_BLACK;
             }
             dc.setColor(fill, Graphics.COLOR_TRANSPARENT);
             dc.fillRoundedRectangle(cx - rowW / 2, y, rowW, _optionH, _optionH / 2);
@@ -186,15 +209,19 @@ class JpQuizView extends WatchUi.View {
                 dc.setColor(EyesRenderer.COLOR_RIM, Graphics.COLOR_TRANSPARENT);
                 dc.drawRoundedRectangle(cx - rowW / 2, y, rowW, _optionH, _optionH / 2);
             }
-            var lines = RoundText.wrap(dc, label(_options[i]), optFont, rowW - 24);
+            var lines = RoundText.wrap(dc, label(_options[i]), optFont, rowW - JpQuiz.ROW_PADDING);
             dc.setColor(text, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, y + _optionH / 2, optFont, lines[0] + (lines.size() > 1 ? "..." : ""),
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
 
         if (_answered) {
+            dc.setColor(_right ? EyesRenderer.COLOR_CALM : EyesRenderer.COLOR_ALERT, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, h * 86 / 100, optFont,
+                WatchUi.loadResource(_right ? Rez.Strings.JpRight : Rez.Strings.JpWrong) as String,
+                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             dc.setColor(Theme.TEXT_HINT, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h * 92 / 100, optFont, WatchUi.loadResource(Rez.Strings.JpHintNext) as String,
+            dc.drawText(cx, h * 93 / 100, optFont, WatchUi.loadResource(Rez.Strings.JpHintNext) as String,
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
@@ -214,22 +241,46 @@ class JpQuizDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    // Botones físicos. BACK (y el resto) siguen su camino normal.
+    function onKey(event as WatchUi.KeyEvent) as Boolean {
+        var key = event.getKey();
+        System.println("quiz tecla " + key);
+        if (key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START) {
+            _view.primaryAction();
+            return true;
+        }
+        if (key == WatchUi.KEY_DOWN) {
+            _view.moveSelection(1);
+            return true;
+        }
+        if (key == WatchUi.KEY_UP) {
+            _view.moveSelection(-1);
+            return true;
+        }
+        return false;
+    }
+
     function onSelect() as Boolean {
-        _view.selectPressed();
+        _view.selectWithoutTarget();
         return true;
     }
 
+    // Deslizar no cambia la selección: con el dedo se toca la opción.
     function onNextPage() as Boolean {
-        return _view.moveSelection(1);
+        return true;
     }
 
     function onPreviousPage() as Boolean {
-        return _view.moveSelection(-1);
+        return true;
     }
 }
 
 // Reglas del quiz sin estado de pantalla, para poder probarlas.
 module JpQuiz {
+
+    // Ancho de fila: la de abajo aún cabe en la pantalla redonda.
+    const ROW_PERCENT = 78;
+    const ROW_PADDING = 20;
 
     function isCorrect(options as Array<Number>, selected as Number, item as Number) as Boolean {
         return selected >= 0 && selected < options.size() && options[selected] == item;

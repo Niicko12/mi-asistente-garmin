@@ -26,7 +26,7 @@ palabra de activación ni se conecta con él.
 | **Datos del reloj** | Cada pregunta lleva batería, pasos, calorías, distancia, pisos, minutos de intensidad, pulso actual y en reposo, Body Battery, estrés, SpO2, respiración, recuperación, VO2máx, horario de sueño, clima y amanecer/atardecer. |
 | **Tareas y notas** | Se guardan en el reloj; las notas usan plantillas o el teclado. Las pendientes viajan como contexto. |
 | **Japonés N5** | Tarjetas con lectura, romaji, significado y pronunciación; quiz de 3 opciones que repite lo que fallas; quiz de hiragana; racha de días. Los verbos van en forma cortés ます y se traducen conjugados: たべます = «como (comer)». |
-| **Panel en el teléfono** | Menú → Configurar (QR) abre en el iPhone [/api/setup](https://mi-asistente-garmin.vercel.app/api/setup): agregar tareas, notas y tarjetas de japonés (la IA completa lectura, romaji y significado) y poner las claves de IA. El reloj lo recoge al abrir su menú. |
+| **Panel en el teléfono** | Menú → Configurar (QR) muestra un QR hacia [/api/setup](https://mi-asistente-garmin.vercel.app/api/setup) y un código de 6 dígitos para enlazarlo (vale 10 minutos y 5 intentos). Desde el panel: tareas, notas, preguntas rápidas, proyectos, tarjetas de japonés (la IA completa lectura, romaji y significado) y claves de IA. El reloj lo recoge al abrir su menú. |
 | **Estados visuales** | Ojos estilo Monki: disponible, escuchando, pensando, hablando, sin conexión y error. |
 
 <p align="center">
@@ -85,6 +85,7 @@ mi-asistente-garmin/
 │   ├── api/setup.ts            panel y guía para el teléfono (página HTML)
 │   ├── api/config.ts           lo que usa el panel: claves, bandeja y tarjetas
 │   ├── api/sync.ts             el reloj recoge lo agregado en el panel
+│   ├── api/pair.ts             código de 6 dígitos para enlazar el panel
 │   └── lib/                    proveedores de IA, voz, config (Blob) y codificador Ogg/Opus
 ├── tools/
 │   ├── mtp_send.py             instalar en el reloj por MTP
@@ -162,8 +163,8 @@ resuelve la ruta `GARMIN/Apps`.
 
 - Asignar Mi Asistente a un acceso directo (Ajustes → Sistema → Teclas de acceso rápido) para abrirla y hablar al instante.
 - En la app: toca para terminar de hablar o para preguntar otra vez; UP/DOWN desplaza respuestas largas.
-- Menú → **Configurar (QR)**: escanéalo con el iPhone para abrir el panel. Entra con el `DEVICE_TOKEN`; desde ahí agregas tareas, notas y tarjetas de japonés y cambias las claves de IA. El reloj recoge lo nuevo al abrir su menú (con el iPhone cerca; como mucho cada 2 minutos).
-- Japonés → Quiz: toca la opción que creas correcta o usa UP/DOWN y START. Un toque fuera de las opciones no responde.
+- Menú → **Configurar (QR)**: escanéalo con el iPhone y escribe el código de 6 dígitos que aparece debajo (o el `DEVICE_TOKEN`). El teléfono queda enlazado. El reloj recoge lo nuevo al abrir su menú (con el iPhone cerca; como mucho cada 2 minutos).
+- Japonés → Quiz: toca la opción, o mueve el resaltado cian con UP/DOWN y confirma con START. Un toque fuera de las opciones no responde. Cada significado cabe completo en su fila (lo comprueba `quizLabelsFit`).
 
 <p align="center">
   <img src="docs/setup-qr.png" width="160" alt="QR que abre la guía de configuración en mi-asistente-garmin.vercel.app/api/setup">

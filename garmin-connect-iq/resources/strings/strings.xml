@@ -23,7 +23,9 @@
     <string id="MenuSetup">Configurar (QR)</string>
 
     <string id="SetupTitle">CONFIGURAR</string>
-    <string id="SetupHint">Escanéalo con el iPhone</string>
+    <string id="SetupHint">Código del panel</string>
+    <string id="SetupLoading">Pidiendo código...</string>
+    <string id="SetupNoCode">Sin código: usa el token</string>
 
     <string id="AskTitle">Preguntar</string>
     <string id="AskVoice">Hablar</string>
@@ -62,7 +64,9 @@
     <string id="JpItems">tarjetas</string>
     <string id="JpHintReveal">toca: ver</string>
     <string id="JpHintListen">toca: escuchar</string>
-    <string id="JpHintNext">Toca: siguiente</string>
+    <string id="JpHintNext">Toca o START: siguiente</string>
+    <string id="JpRight">¡Correcto!</string>
+    <string id="JpWrong">Incorrecto</string>
 
     <string id="ProjectsTitle">Proyectos</string>
     <string id="NextStep">Siguiente</string>

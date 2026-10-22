@@ -4,7 +4,8 @@ import Toybox.System;
 
 // Recoge lo agregado desde el panel del teléfono (/api/sync): tareas y
 // notas se suman a las del reloj y se confirman al servidor para que salgan
-// de la bandeja; las tarjetas de japonés reemplazan la lista local.
+// de la bandeja; tarjetas de japonés, preguntas rápidas y proyectos
+// reemplazan las listas locales.
 // Se lanza al abrir el menú, como mucho una vez cada 2 minutos.
 module PhoneSync {
 
@@ -58,6 +59,14 @@ class PhoneSyncClient {
         var cards = data["cards"];
         if (cards instanceof Array) {
             JpCustom.replace(cards as Array<Array>);
+        }
+        var questions = data["questions"];
+        if (questions instanceof Array) {
+            Store.save(DemoData.KEY_QUESTIONS, questions as Array<String>);
+        }
+        var projects = data["projects"];
+        if (projects instanceof Array) {
+            Store.save(DemoData.KEY_PROJECTS, projects as Array<Array>);
         }
         var tasks = take(data["tasks"], true);
         var notes = take(data["notes"], false);

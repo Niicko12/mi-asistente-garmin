@@ -7,8 +7,11 @@
 //            variables de entorno, que quedan como respaldo.
 //   - inbox: tareas y notas que esperan a que el reloj las recoja.
 //   - cards: tarjetas de japonés propias; el reloj recibe la lista completa.
+//   - questions, projects: preguntas rápidas y proyectos del menú del reloj.
+//   - pair, sessions: código de 6 dígitos que muestra el reloj y sesiones
+//            del panel que se abrieron con él (solo se guardan sus hashes).
 
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { BlobPreconditionFailedError, get, put } from "@vercel/blob";
 
 export const KEY_NAMES = ["GROQ_API_KEY", "GEMINI_API_KEY", "NVIDIA_API_KEY", "GOOGLE_TTS_API_KEY"] as const;
@@ -27,15 +30,31 @@ export interface Card {
   meaning: string;
 }
 
+export interface Project {
+  id: number;
+  title: string;
+  last: string;
+  next: string;
+}
+
 export interface Config {
   keys: Partial<Record<KeyName, string>>;
   inbox: { tasks: InboxItem[]; notes: InboxItem[] };
   cards: Card[];
+  questions: InboxItem[];
+  projects: Project[];
+  pair?: { hash: string; expires: number; tries: number };
+  sessions: { hash: string; created: number }[];
   nextId: number;
 }
 
 export const MAX_INBOX = 20;
 export const MAX_CARDS = 60;
+export const MAX_QUESTIONS = 8;
+export const MAX_PROJECTS = 6;
+const MAX_SESSIONS = 5;
+const PAIR_MS = 10 * 60_000;
+const PAIR_TRIES = 5;
 
 const PATH = "config/settings.json";
 // Cada instancia de la función relee el Blob como mucho cada 30 s.
@@ -43,7 +62,7 @@ const CACHE_MS = 30_000;
 let cache: { config: Config; at: number } | undefined;
 
 function empty(): Config {
-  return { keys: {}, inbox: { tasks: [], notes: [] }, cards: [], nextId: 1 };
+  return { keys: {}, inbox: { tasks: [], notes: [] }, cards: [], questions: [], projects: [], sessions: [], nextId: 1 };
 }
 
 export function storageConfigured(): boolean {
@@ -142,4 +161,50 @@ export function keyStatus(config: Config): Record<KeyName, KeyStatus> {
     };
   }
   return result;
+}
+
+function sha(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function sameHash(a: string, b: string): boolean {
+  return a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
+// El reloj pide un código nuevo cada vez que muestra la pantalla del QR.
+export async function newPairCode(): Promise<string> {
+  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  await updateConfig((c) => {
+    c.pair = { hash: sha(code), expires: Date.now() + PAIR_MS, tries: 0 };
+  });
+  return code;
+}
+
+// Canjea el código por una sesión del panel. Tras 5 intentos fallidos o 10
+// minutos el código deja de valer y hay que volver a abrir el QR en el reloj.
+export async function claimPairCode(code: string): Promise<string | null> {
+  const session = randomBytes(32).toString("hex");
+  let ok = false;
+  await updateConfig((c) => {
+    const pair = c.pair;
+    if (!pair || pair.expires < Date.now() || pair.tries >= PAIR_TRIES) {
+      delete c.pair;
+      return;
+    }
+    if (sameHash(pair.hash, sha(code))) {
+      ok = true;
+      delete c.pair;
+      c.sessions = [...c.sessions, { hash: sha(session), created: Date.now() }].slice(-MAX_SESSIONS);
+    } else {
+      pair.tries++;
+    }
+  });
+  return ok ? session : null;
+}
+
+export async function validSession(token: string): Promise<boolean> {
+  if (!token) return false;
+  const hash = sha(token);
+  const { sessions } = await loadConfig(true);
+  return sessions.some((s) => sameHash(s.hash, hash));
 }

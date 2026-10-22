@@ -24,20 +24,21 @@ module JapaneseDeck {
 
     // [categoría, japonés, lectura en kana ("" si es igual), romaji, español]
 // Los verbos van en forma cortés ます (presente/futuro): "como", no "comer";
-// el infinitivo va entre paréntesis.
+// el infinitivo va entre paréntesis. Cada significado debe caber en una fila
+// del quiz (lo comprueba la prueba quizLabelsFit).
     const ITEMS = [
         [0, "おはよう", "", "ohayou", "Buenos días (informal)"],
         [0, "おはようございます", "", "ohayou gozaimasu", "Buenos días (formal)"],
         [0, "こんにちは", "", "konnichiwa", "Hola / buenas tardes"],
         [0, "こんばんは", "", "konbanwa", "Buenas noches (saludo)"],
-        [0, "おやすみなさい", "", "oyasuminasai", "Buenas noches (al dormir)"],
+        [0, "おやすみなさい", "", "oyasuminasai", "Buenas noches (dormir)"],
         [0, "ありがとう", "", "arigatou", "Gracias"],
         [0, "ありがとうございます", "", "arigatou gozaimasu", "Muchas gracias"],
         [0, "すみません", "", "sumimasen", "Disculpe / perdone"],
         [0, "ごめんなさい", "", "gomennasai", "Perdón (disculpa)"],
         [0, "さようなら", "", "sayounara", "Adiós"],
         [0, "はじめまして", "", "hajimemashite", "Mucho gusto"],
-        [0, "よろしくおねがいします", "", "yoroshiku onegaishimasu", "Un placer / cuento contigo"],
+        [0, "よろしくおねがいします", "", "yoroshiku onegaishimasu", "Cuento contigo"],
 
         [1, "はい", "", "hai", "Sí"],
         [1, "いいえ", "", "iie", "No"],
@@ -47,7 +48,7 @@ module JapaneseDeck {
         [1, "トイレはどこですか", "", "toire wa doko desu ka", "¿Dónde está el baño?"],
         [1, "もういちどおねがいします", "", "mou ichido onegaishimasu", "Otra vez, por favor"],
         [1, "がんばりましょう", "", "ganbarimashou", "¡Esforcémonos!"],
-        [1, "いただきます", "", "itadakimasu", "Buen provecho (antes de comer)"],
+        [1, "いただきます", "", "itadakimasu", "Buen provecho"],
         [1, "ごちそうさまでした", "", "gochisousama deshita", "Gracias por la comida"],
         [1, "だいじょうぶ", "", "daijoubu", "Estoy bien / tranquilo"],
         [1, "ちょっとまって", "", "chotto matte", "Espera un momento"],
@@ -66,7 +67,7 @@ module JapaneseDeck {
 
         [3, "水", "みず", "mizu", "Agua"],
         [3, "お茶", "おちゃ", "ocha", "Té"],
-        [3, "ごはん", "", "gohan", "Arroz cocido / comida"],
+        [3, "ごはん", "", "gohan", "Arroz / comida"],
         [3, "パン", "", "pan", "Pan"],
         [3, "魚", "さかな", "sakana", "Pescado"],
         [3, "肉", "にく", "niku", "Carne"],
@@ -90,7 +91,7 @@ module JapaneseDeck {
         [4, "起きます", "おきます", "okimasu", "Me levanto (despertar)"],
 
         [5, "今日", "きょう", "kyou", "Hoy"],
-        [5, "明日", "あした", "ashita", "Mañana (día siguiente)"],
+        [5, "明日", "あした", "ashita", "Mañana (día)"],
         [5, "昨日", "きのう", "kinou", "Ayer"],
         [5, "今", "いま", "ima", "Ahora"],
         [5, "毎日", "まいにち", "mainichi", "Todos los días"],

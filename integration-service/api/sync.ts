@@ -2,11 +2,13 @@
 //
 // Autenticación: `Authorization: Bearer <DEVICE_TOKEN>`.
 //
-// GET → { tasks: [[id, texto]], notes: [[id, texto]], cards: [[id, jp, lectura, romaji, significado]] }
+// GET → { tasks: [[id, texto]], notes: [[id, texto]], cards: [[id, jp, lectura, romaji, significado]],
+//         questions: [texto], projects: [[nombre, último, siguiente]] }
 //   Listas de listas: el reloj las guarda tal cual en Storage.
 // POST { tasks: [id], notes: [id] } → { ok: true }
-//   Confirma lo que el reloj guardó; se quita de la bandeja. Las tarjetas no
-//   se confirman: el reloj reemplaza las suyas por la lista completa.
+//   Confirma lo que el reloj guardó; se quita de la bandeja. Tarjetas,
+//   preguntas y proyectos no se confirman: el reloj reemplaza los suyos por
+//   la lista completa (vacía = usa los de ejemplo).
 
 import { authorized, json } from "../lib/assistant.js";
 import { loadConfig, storageConfigured, updateConfig } from "../lib/config.js";
@@ -18,6 +20,8 @@ export async function GET(request: Request): Promise<Response> {
     tasks: config.inbox.tasks.map((t) => [t.id, t.text]),
     notes: config.inbox.notes.map((n) => [n.id, n.text]),
     cards: config.cards.map((c) => [c.id, c.jp, c.reading, c.romaji, c.meaning]),
+    questions: config.questions.map((q) => q.text),
+    projects: config.projects.map((p) => [p.title, p.last, p.next]),
   });
 }
 

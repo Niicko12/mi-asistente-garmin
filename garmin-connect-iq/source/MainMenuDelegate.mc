@@ -36,7 +36,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
         var menu = new WatchUi.Menu2({ :title => Rez.Strings.AskTitle });
         menu.addItem(new WatchUi.MenuItem(Rez.Strings.AskVoice, null, :voice, null));
         menu.addItem(new WatchUi.MenuItem(Rez.Strings.AskWrite, null, :write, null));
-        var questions = DemoData.QUESTIONS;
+        var questions = DemoData.questions();
         for (var i = 0; i < questions.size(); i++) {
             menu.addItem(new WatchUi.MenuItem(questions[i], null, i, null));
         }
@@ -45,9 +45,9 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
 
     private function pushProjectsMenu() as Void {
         var menu = new WatchUi.Menu2({ :title => Rez.Strings.ProjectsTitle });
-        var titles = DemoData.PROJECT_TITLES;
-        for (var i = 0; i < titles.size(); i++) {
-            menu.addItem(new WatchUi.MenuItem(titles[i], DemoData.PROJECT_NEXT[i], i, null));
+        var projects = DemoData.projects();
+        for (var i = 0; i < projects.size(); i++) {
+            menu.addItem(new WatchUi.MenuItem(projects[i][0] as String, projects[i][2] as String, i, null));
         }
         WatchUi.pushView(menu, new ProjectsMenuDelegate(), WatchUi.SLIDE_LEFT);
     }
@@ -84,7 +84,7 @@ class AskMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id == :write) {
             WatchUi.pushView(new WatchUi.TextPicker(""), new AskPicker(), WatchUi.SLIDE_LEFT);
         } else {
-            var view = new AnswerView(DemoData.QUESTIONS[id as Number]);
+            var view = new AnswerView(DemoData.questions()[id as Number]);
             WatchUi.pushView(view, new AnswerDelegate(view), WatchUi.SLIDE_LEFT);
         }
     }
@@ -97,12 +97,12 @@ class ProjectsMenuDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     function onSelect(item as WatchUi.MenuItem) as Void {
-        var i = item.getId() as Number;
+        var project = DemoData.projects()[item.getId() as Number];
         var body = (WatchUi.loadResource(Rez.Strings.LastUpdate) as String) + ": "
-            + DemoData.PROJECT_LAST[i] + "\n"
+            + project[1] + "\n"
             + (WatchUi.loadResource(Rez.Strings.NextStep) as String) + ": "
-            + DemoData.PROJECT_NEXT[i];
-        var view = new TextView(DemoData.PROJECT_TITLES[i], body);
+            + project[2];
+        var view = new TextView(project[0] as String, body);
         WatchUi.pushView(view, new TextViewDelegate(view), WatchUi.SLIDE_LEFT);
     }
 }
