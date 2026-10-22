@@ -89,15 +89,21 @@ class JpCardView extends WatchUi.View {
             dc.setPenWidth(1);
         }
 
-        var jpLines = RoundText.wrap(dc, JapaneseDeck.jp(item), font, w * 74 / 100);
+        // Sin glifos para la tarjeta: romaji con la fuente del sistema.
+        var face = JapaneseDeck.display(item);
+        var faceFont = face.length() > 0 ? font : Graphics.FONT_MEDIUM;
+        if (face.length() == 0) {
+            face = JapaneseDeck.romaji(item);
+        }
+        var jpLines = RoundText.wrap(dc, face, faceFont, w * 74 / 100);
         var jpTop = _revealed ? h * 27 / 100 : h * 38 / 100;
-        RoundText.draw(dc, jpLines, font, Graphics.COLOR_WHITE, jpTop,
-            jpTop + jpLines.size() * dc.getFontHeight(font), 0);
+        RoundText.draw(dc, jpLines, faceFont, Graphics.COLOR_WHITE, jpTop,
+            jpTop + jpLines.size() * dc.getFontHeight(faceFont), 0);
 
         if (_revealed) {
-            var y = jpTop + jpLines.size() * dc.getFontHeight(font) + 4;
+            var y = jpTop + jpLines.size() * dc.getFontHeight(faceFont) + 4;
             var reading = JapaneseDeck.reading(item);
-            if (reading.length() > 0) {
+            if (reading.length() > 0 && !reading.equals(face) && JapaneseDeck.drawable(reading)) {
                 var readingLines = RoundText.wrap(dc, reading, font, w * 74 / 100);
                 RoundText.draw(dc, readingLines, font, Theme.TEXT_SECONDARY, y, y + readingLines.size() * dc.getFontHeight(font), 0);
                 y += readingLines.size() * dc.getFontHeight(font);

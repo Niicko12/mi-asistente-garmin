@@ -3,6 +3,7 @@
 
 import { timingSafeEqual } from "node:crypto";
 import { GoogleGenAI, type GenerateContentConfig, type PartUnion } from "@google/genai";
+import { apiKey as configuredKey } from "./config.js";
 
 export const MAX_ITEMS = 30;
 export const MAX_ITEM_LEN = 120;
@@ -34,7 +35,8 @@ export function watchText(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, MAX_WATCH) : undefined;
 }
 
-let client: GoogleGenAI | undefined;
+// Se recrea si la clave cambia desde el panel.
+let client: { sdk: GoogleGenAI; key: string } | undefined;
 
 export class NotConfiguredError extends Error {}
 
@@ -43,9 +45,9 @@ export class NotConfiguredError extends Error {}
 // Gemini a veces retiene la petición casi un minuto sin error: cada intento
 // tiene su límite de tiempo y, si se agota, pasa al siguiente.
 export async function generate(parts: PartUnion[], config: GenerateContentConfig): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = await configuredKey("GEMINI_API_KEY");
   if (!apiKey) throw new NotConfiguredError();
-  client ??= new GoogleGenAI({ apiKey });
+  if (client?.key !== apiKey) client = { sdk: new GoogleGenAI({ apiKey }), key: apiKey };
 
   const attempts = [
     { model: process.env.GEMINI_MODEL ?? "gemini-flash-latest", thinkingBudget: 0 as number | undefined, timeoutMs: 12_000 },
@@ -53,7 +55,7 @@ export async function generate(parts: PartUnion[], config: GenerateContentConfig
   ];
   for (const { model, thinkingBudget, timeoutMs } of attempts) {
     try {
-      const result = await client.models.generateContent({
+      const result = await client.sdk.models.generateContent({
         model,
         contents: parts,
         config: {
@@ -91,19 +93,19 @@ interface ChatProvider {
   extra: Record<string, unknown>;
 }
 
-function chatProviders(): ChatProvider[] {
+async function chatProviders(): Promise<ChatProvider[]> {
   return [
     {
       name: "groq",
       url: GROQ_URL,
-      apiKey: process.env.GROQ_API_KEY,
+      apiKey: await configuredKey("GROQ_API_KEY"),
       model: process.env.GROQ_MODEL ?? "openai/gpt-oss-120b",
       extra: { reasoning_effort: "low" },
     },
     {
       name: "nvidia",
       url: "https://integrate.api.nvidia.com/v1",
-      apiKey: process.env.NVIDIA_API_KEY,
+      apiKey: await configuredKey("NVIDIA_API_KEY"),
       model: process.env.NVIDIA_MODEL ?? "nvidia/nemotron-3.5-lightning-30b-a3b",
       extra: {},
     },
@@ -111,7 +113,7 @@ function chatProviders(): ChatProvider[] {
 }
 
 export async function openAiChat(prompt: string): Promise<string | null> {
-  for (const provider of chatProviders()) {
+  for (const provider of await chatProviders()) {
     if (!provider.apiKey) continue;
     const text = await chatWith(provider, prompt);
     if (text) return text;
@@ -154,7 +156,7 @@ const NO_SPEECH = 0.5;
 
 // Devuelve el texto, "" si no hubo voz, o null si la transcripción falló.
 export async function groqTranscribe(audio: Buffer, mimeType: string): Promise<string | null> {
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = await configuredKey("GROQ_API_KEY");
   if (!apiKey) return null;
   const form = new FormData();
   const ext = mimeType === "audio/wav" ? "wav" : "ogg";

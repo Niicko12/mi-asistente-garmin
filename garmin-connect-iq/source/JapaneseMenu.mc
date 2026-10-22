@@ -19,9 +19,10 @@ module JapaneseMenu {
         var title = mode == :cards ? Rez.Strings.JpCards : Rez.Strings.JpQuiz;
         var menu = new WatchUi.Menu2({ :title => title });
         for (var i = 0; i < JapaneseDeck.CATEGORIES.size(); i++) {
-            if (i != JapaneseDeck.KANA) {
+            var count = JapaneseDeck.indicesFor(i).size();
+            if (i != JapaneseDeck.KANA && count > 0) {
                 menu.addItem(new WatchUi.MenuItem(JapaneseDeck.CATEGORIES[i],
-                    JapaneseDeck.indicesFor(i).size() + " " + (WatchUi.loadResource(Rez.Strings.JpItems) as String), i, null));
+                    count + " " + (WatchUi.loadResource(Rez.Strings.JpItems) as String), i, null));
             }
         }
         WatchUi.pushView(menu, new JpCategoryDelegate(mode), WatchUi.SLIDE_LEFT);

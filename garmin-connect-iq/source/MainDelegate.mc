@@ -12,6 +12,7 @@ class MainDelegate extends WatchUi.BehaviorDelegate {
 
     // START o toque: abre el menú.
     function onSelect() as Boolean {
+        PhoneSync.run();
         var menu = new WatchUi.Menu2({ :title => Rez.Strings.MenuTitle });
         menu.addItem(new WatchUi.MenuItem(Rez.Strings.MenuAsk, null, :ask, null));
         menu.addItem(new WatchUi.MenuItem(Rez.Strings.MenuNote, null, :note, null));

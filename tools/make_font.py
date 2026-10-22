@@ -1,11 +1,13 @@
-"""Genera una fuente BMFont (.fnt + .png) con solo los caracteres japoneses
-que usa la app. Connect IQ no trae glifos japoneses en el fēnix 8.
+"""Genera una fuente BMFont (.fnt + .png) con los caracteres japoneses que
+usa la app. Connect IQ no trae glifos japoneses en el fēnix 8.
 
 Uso:
-    python make_font.py <fuente.ttf> <JapaneseDeck.mc> <dir_salida> [tamaño]
+    python make_font.py <fuente.ttf> <JapaneseDeck.mc> <dir_salida> [tamaño] [JpCharset.mc]
 
-Requiere Pillow. Los caracteres se extraen de JapaneseDeck.mc, así que
-basta con volver a ejecutarlo al cambiar el mazo.
+Requiere Pillow. Incluye todo el hiragana y el katakana (para las tarjetas
+que se agregan desde el teléfono) más los kanji de JapaneseDeck.mc, así que
+basta con volver a ejecutarlo al cambiar el mazo. Con JpCharset.mc escribe
+también la lista de caracteres, que el reloj usa para saber qué puede dibujar.
 """
 import os
 import re
@@ -22,7 +24,8 @@ def main():
     ttf, deck, out_dir = sys.argv[1:4]
     size = int(sys.argv[4]) if len(sys.argv) > 4 else 34
 
-    chars = sorted(set(CJK.findall(open(deck, encoding="utf-8").read())))
+    kana = [chr(c) for c in range(0x3041, 0x3097)] + [chr(c) for c in range(0x30A1, 0x30FB)] + ["ー", "、", "。"]
+    chars = sorted(set(CJK.findall(open(deck, encoding="utf-8").read())) | set(kana))
     if not chars:
         sys.exit("no se encontraron caracteres japoneses en " + deck)
 
@@ -74,6 +77,15 @@ def main():
             f"xoffset={gx0} yoffset={gy0} xadvance={adv} page=0 chnl=15"
         )
     open(os.path.join(out_dir, NAME + ".fnt"), "w", encoding="utf-8").write("\n".join(lines) + "\n")
+    if len(sys.argv) > 5:
+        source = (
+            "import Toybox.Lang;\n\n"
+            "// Generado por tools/make_font.py: caracteres que tiene la fuente JpFont.\n"
+            "module JpCharset {\n"
+            f'    const CHARS = "{"".join(chars)}";\n'
+            "}\n"
+        )
+        open(sys.argv[5], "w", encoding="utf-8").write(source)
     print(f"{len(chars)} glifos, atlas {atlas_w}x{atlas_h}: {''.join(chars)}")
 
 

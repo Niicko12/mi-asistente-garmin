@@ -26,7 +26,7 @@ palabra de activación ni se conecta con él.
 | **Datos del reloj** | Cada pregunta lleva batería, pasos, calorías, distancia, pisos, minutos de intensidad, pulso actual y en reposo, Body Battery, estrés, SpO2, respiración, recuperación, VO2máx, horario de sueño, clima y amanecer/atardecer. |
 | **Tareas y notas** | Se guardan en el reloj; las notas usan plantillas o el teclado. Las pendientes viajan como contexto. |
 | **Japonés N5** | Tarjetas con lectura, romaji, significado y pronunciación; quiz de 3 opciones que repite lo que fallas; quiz de hiragana; racha de días. Los verbos van en forma cortés ます y se traducen conjugados: たべます = «como (comer)». |
-| **Configurar (QR)** | El menú muestra un QR que abre en el iPhone la guía de configuración ([/api/setup](https://mi-asistente-garmin.vercel.app/api/setup)). |
+| **Panel en el teléfono** | Menú → Configurar (QR) abre en el iPhone [/api/setup](https://mi-asistente-garmin.vercel.app/api/setup): agregar tareas, notas y tarjetas de japonés (la IA completa lectura, romaji y significado) y poner las claves de IA. El reloj lo recoge al abrir su menú. |
 | **Estados visuales** | Ojos estilo Monki: disponible, escuchando, pensando, hablando, sin conexión y error. |
 
 <p align="center">
@@ -54,7 +54,8 @@ fēnix 8 ──BLE──▶ iPhone (Garmin Connect) ──HTTPS──▶ Vercel 
 - **Las claves de IA nunca están en el reloj.** El reloj solo conoce un token de dispositivo.
 - **Respaldo en cadena**, como en Monki: si un proveedor falla o se queda sin cuota, se usa el siguiente; el que se queda sin cuota se salta 10 minutos.
 - **Voz por partes:** el reloj rechaza respuestas web grandes (~27 KB fallaba, ~5–9 KB funciona). El texto se parte en frases y el reloj pide la siguiente mientras suena la actual.
-- **Fuente japonesa propia:** las fuentes del sistema no tienen kana ni kanji; `tools/make_font.py` genera una fuente BMFont solo con los 113 caracteres del mazo.
+- **Fuente japonesa propia:** las fuentes del sistema no tienen kana ni kanji; `tools/make_font.py` genera una fuente BMFont con todo el hiragana y katakana más los kanji del mazo (223 caracteres). Las tarjetas del teléfono con kanji fuera de la fuente se muestran con su lectura en kana.
+- **Panel y claves:** lo que se agrega desde el teléfono y las claves de IA se guardan en un Blob privado de Vercel; las claves van cifradas (AES-256-GCM con una clave derivada de `DEVICE_TOKEN`) y tienen prioridad sobre las variables de entorno.
 
 ## Estructura
 
@@ -72,17 +73,22 @@ mi-asistente-garmin/
 │       ├── WatchData.mc        datos del reloj que viajan con cada pregunta
 │       ├── EyesRenderer.mc     cara estilo Monki
 │       ├── Jp*.mc, JapaneseDeck.mc   práctica de japonés
-│       ├── SetupQrView.mc      QR de la guía de configuración
+│       ├── SetupQrView.mc      QR del panel del teléfono
+│       ├── PhoneSync.mc        recoge tareas, notas y tarjetas del panel
+│       ├── JpCustom.mc         tarjetas de japonés del teléfono
+│       ├── JpCharset.mc        caracteres de la fuente (generado)
 │       └── Theme.mc            colores compartidos
 ├── integration-service/        backend en Vercel (Node.js + TypeScript)
 │   ├── api/ask.ts              pregunta escrita
 │   ├── api/ask-audio.ts        pregunta hablada
 │   ├── api/speak.ts            voz por partes
-│   ├── api/setup.ts            guía de configuración (página HTML, sin token)
-│   └── lib/                    proveedores de IA, voz y codificador Ogg/Opus
+│   ├── api/setup.ts            panel y guía para el teléfono (página HTML)
+│   ├── api/config.ts           lo que usa el panel: claves, bandeja y tarjetas
+│   ├── api/sync.ts             el reloj recoge lo agregado en el panel
+│   └── lib/                    proveedores de IA, voz, config (Blob) y codificador Ogg/Opus
 ├── tools/
 │   ├── mtp_send.py             instalar en el reloj por MTP
-│   └── make_font.py            generar la fuente japonesa
+│   └── make_font.py            generar la fuente japonesa y JpCharset.mc
 └── docs/                       plan, validación de capacidades, capturas y mockup
 ```
 
@@ -125,6 +131,20 @@ cd garmin-connect-iq
 "${SDK}bin/monkeydo" bin/MiAsistente.prg fenix847mm
 ```
 
+Pruebas unitarias (quiz y tarjetas del teléfono) en el simulador:
+
+```bash
+"${SDK}bin/monkeyc" -d fenix847mm -f monkey.jungle -o bin/test.prg -y ../developer_key.der -t
+"${SDK}bin/monkeydo" bin/test.prg fenix847mm -t
+```
+
+Regenerar la fuente japonesa tras cambiar el mazo (requiere Pillow y `tools/fonts/NotoSansJP.ttf`):
+
+```bash
+python3 -I tools/make_font.py tools/fonts/NotoSansJP.ttf garmin-connect-iq/source/JapaneseDeck.mc \
+  garmin-connect-iq/resources/fonts 34 garmin-connect-iq/source/JpCharset.mc
+```
+
 ### Instalar en el reloj
 
 El fēnix 8 se conecta por MTP, no aparece en Finder. Conectarlo **directo al
@@ -142,7 +162,8 @@ resuelve la ruta `GARMIN/Apps`.
 
 - Asignar Mi Asistente a un acceso directo (Ajustes → Sistema → Teclas de acceso rápido) para abrirla y hablar al instante.
 - En la app: toca para terminar de hablar o para preguntar otra vez; UP/DOWN desplaza respuestas largas.
-- Menú → **Configurar (QR)**: escanéalo con el iPhone para abrir la guía de configuración.
+- Menú → **Configurar (QR)**: escanéalo con el iPhone para abrir el panel. Entra con el `DEVICE_TOKEN`; desde ahí agregas tareas, notas y tarjetas de japonés y cambias las claves de IA. El reloj recoge lo nuevo al abrir su menú (con el iPhone cerca; como mucho cada 2 minutos).
+- Japonés → Quiz: toca la opción que creas correcta o usa UP/DOWN y START. Un toque fuera de las opciones no responde.
 
 <p align="center">
   <img src="docs/setup-qr.png" width="160" alt="QR que abre la guía de configuración en mi-asistente-garmin.vercel.app/api/setup">

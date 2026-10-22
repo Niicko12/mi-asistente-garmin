@@ -8,6 +8,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { MPEGDecoder } from "mpg123-decoder";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+import { apiKey as configuredKey } from "./config.js";
 
 export type Provider = "gemini" | "google" | "edge";
 type Rate = 8000 | 12000 | 16000 | 24000 | 48000;
@@ -51,12 +52,12 @@ type Synth = (text: string, japanese: boolean) => Promise<{ pcm: Buffer; sampleR
 
 const PROVIDERS: Record<Provider, Synth> = { gemini, google, edge };
 
-let geminiClient: GoogleGenAI | undefined;
+let geminiClient: { sdk: GoogleGenAI; key: string } | undefined;
 
 async function gemini(text: string): Promise<{ pcm: Buffer; sampleRate: Rate } | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = await configuredKey("GEMINI_API_KEY");
   if (!apiKey) return null;
-  geminiClient ??= new GoogleGenAI({ apiKey });
+  if (geminiClient?.key !== apiKey) geminiClient = { sdk: new GoogleGenAI({ apiKey }), key: apiKey };
   // Los mismos modelos que usa Monki.
   const models = [process.env.GEMINI_TTS_MODEL ?? "gemini-3.8-flash-lite-tts", "gemini-3.1-flash-tts-preview"];
   // Otra voz que la de Monki (Charon), para distinguir a los dos asistentes.
@@ -64,7 +65,7 @@ async function gemini(text: string): Promise<{ pcm: Buffer; sampleRate: Rate } |
   let quota = 0;
   for (const model of [...new Set(models)]) {
     try {
-      const result = await geminiClient.models.generateContent({
+      const result = await geminiClient.sdk.models.generateContent({
         model,
         contents: text,
         config: {
@@ -88,7 +89,7 @@ async function gemini(text: string): Promise<{ pcm: Buffer; sampleRate: Rate } |
 }
 
 async function google(text: string, japanese: boolean): Promise<{ pcm: Buffer; sampleRate: Rate } | null> {
-  const apiKey = process.env.GOOGLE_TTS_API_KEY;
+  const apiKey = await configuredKey("GOOGLE_TTS_API_KEY");
   if (!apiKey) return null;
   const voice = japanese
     ? { languageCode: "ja-JP", name: process.env.GOOGLE_TTS_VOICE_JA ?? "ja-JP-Neural2-B" }

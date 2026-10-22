@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.System;
 import Toybox.WatchUi;
 
 // Quiz de tres opciones. UP/DOWN mueve la selección y START responde; en
@@ -22,6 +23,9 @@ class JpQuizView extends WatchUi.View {
     private var _speech as SpeechPlayer;
     private var _optionTops as Array<Number> = [] as Array<Number>;
     private var _optionH as Number = 0;
+    // Momento de la última respuesta por toque: algunos relojes envían
+    // también onSelect tras el toque y saltaría a la siguiente palabra.
+    private var _tapAnsweredAt as Number = 0;
 
     function initialize(category as Number) {
         View.initialize();
@@ -50,9 +54,12 @@ class JpQuizView extends WatchUi.View {
         _speech.stop();
         _item = JpProgress.pick(_pool, _item);
         _options = [_item] as Array<Number>;
-        while (_options.size() < OPTIONS && _options.size() < _pool.size()) {
+        // Tope de intentos por si dos tarjetas comparten significado.
+        var tries = 0;
+        while (_options.size() < OPTIONS && _options.size() < _pool.size() && tries < 60) {
+            tries++;
             var candidate = _pool[JpProgress.random(_pool.size())];
-            if (_options.indexOf(candidate) < 0 && label(candidate) != label(_item)) {
+            if (_options.indexOf(candidate) < 0 && !label(candidate).equals(label(_item))) {
                 _options.add(candidate);
             }
         }
@@ -83,7 +90,7 @@ class JpQuizView extends WatchUi.View {
             return;
         }
         _answered = true;
-        _right = _options[_selected] == _item;
+        _right = JpQuiz.isCorrect(_options, _selected, _item);
         _count++;
         if (_right) {
             _score++;
@@ -93,19 +100,27 @@ class JpQuizView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    // Toque directo sobre una opción: la elige y responde.
-    function tapAt(y as Number) as Boolean {
+    // Toque: sobre una opción la elige y responde. Un toque fuera de las
+    // opciones no responde nada (antes respondía la opción resaltada, que
+    // no era la tocada). Ya respondida, cualquier toque pasa a la siguiente.
+    function tapAt(y as Number) as Void {
         if (_answered) {
-            return false;
+            next();
+            return;
         }
-        for (var i = 0; i < _optionTops.size(); i++) {
-            if (y >= _optionTops[i] && y < _optionTops[i] + _optionH) {
-                _selected = i;
-                primaryAction();
-                return true;
-            }
+        var row = JpQuiz.rowAt(y, _optionTops, _optionH);
+        if (row >= 0) {
+            _selected = row;
+            primaryAction();
+            _tapAnsweredAt = System.getTimer();
         }
-        return false;
+    }
+
+    function selectPressed() as Void {
+        if (System.getTimer() - _tapAnsweredAt < 400) {
+            return;
+        }
+        primaryAction();
     }
 
     // En hiragana se responde con romaji; en palabras, con el significado.
@@ -132,10 +147,15 @@ class JpQuizView extends WatchUi.View {
         var status = !_answered ? AssistantState.AVAILABLE : (_right ? AssistantState.AVAILABLE : AssistantState.ERROR);
         EyesRenderer.draw(dc, cx, h * 19 / 100, w * 5 / 100, status, 1);
 
-        var jpLines = RoundText.wrap(dc, JapaneseDeck.jp(_item), font, w * 72 / 100);
-        var lineH = dc.getFontHeight(font);
+        var face = JapaneseDeck.display(_item);
+        var faceFont = face.length() > 0 ? font : Graphics.FONT_MEDIUM;
+        if (face.length() == 0) {
+            face = JapaneseDeck.romaji(_item);
+        }
+        var jpLines = RoundText.wrap(dc, face, faceFont, w * 72 / 100);
+        var lineH = dc.getFontHeight(faceFont);
         var jpTop = h * 29 / 100;
-        RoundText.draw(dc, jpLines, font, Graphics.COLOR_WHITE, jpTop, jpTop + jpLines.size() * lineH, 0);
+        RoundText.draw(dc, jpLines, faceFont, Graphics.COLOR_WHITE, jpTop, jpTop + jpLines.size() * lineH, 0);
 
         if (_answered && _category != JapaneseDeck.KANA) {
             dc.setColor(EyesRenderer.COLOR_EYE, Graphics.COLOR_TRANSPARENT);
@@ -190,15 +210,12 @@ class JpQuizDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onTap(event as WatchUi.ClickEvent) as Boolean {
-        if (_view.tapAt(event.getCoordinates()[1])) {
-            return true;
-        }
-        _view.primaryAction();
+        _view.tapAt(event.getCoordinates()[1]);
         return true;
     }
 
     function onSelect() as Boolean {
-        _view.primaryAction();
+        _view.selectPressed();
         return true;
     }
 
@@ -208,5 +225,27 @@ class JpQuizDelegate extends WatchUi.BehaviorDelegate {
 
     function onPreviousPage() as Boolean {
         return _view.moveSelection(-1);
+    }
+}
+
+// Reglas del quiz sin estado de pantalla, para poder probarlas.
+module JpQuiz {
+
+    function isCorrect(options as Array<Number>, selected as Number, item as Number) as Boolean {
+        return selected >= 0 && selected < options.size() && options[selected] == item;
+    }
+
+    // Fila tocada, o -1. Cada fila cubre también la mitad del hueco que la
+    // separa de las vecinas, para que un toque entre dos no se pierda.
+    function rowAt(y as Number, tops as Array<Number>, rowH as Number) as Number {
+        var n = tops.size();
+        for (var i = 0; i < n; i++) {
+            var top = i == 0 ? tops[i] - 6 : (tops[i - 1] + rowH + tops[i]) / 2;
+            var bottom = i == n - 1 ? tops[i] + rowH + 6 : (tops[i] + rowH + tops[i + 1]) / 2;
+            if (y >= top && y < bottom) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

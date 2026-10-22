@@ -14,10 +14,13 @@ module JapaneseDeck {
         "Comida",
         "Verbos",
         "Tiempo",
-        "Hiragana"
+        "Hiragana",
+        "Mis tarjetas"
     ] as Array<String>;
 
     const KANA = 6;
+    // Tarjetas del teléfono (JpCustom); el menú la oculta si no hay ninguna.
+    const CUSTOM = 7;
 
     // [categoría, japonés, lectura en kana ("" si es igual), romaji, español]
 // Los verbos van en forma cortés ます (presente/futuro): "como", no "comer";
@@ -108,23 +111,57 @@ module JapaneseDeck {
     ] as Array<Array>;
 
     function category(item as Number) as Number {
-        return ITEMS[item][0] as Number;
+        return item >= JpCustom.BASE ? CUSTOM : ITEMS[item][0] as Number;
+    }
+
+    // Campo 1..4 de una tarjeta del mazo o del teléfono.
+    function field(item as Number, index as Number) as String {
+        if (item < JpCustom.BASE) {
+            return ITEMS[item][index] as String;
+        }
+        var card = JpCustom.find(item);
+        return card != null && card[index] instanceof String ? card[index] as String : "";
     }
 
     function jp(item as Number) as String {
-        return ITEMS[item][1] as String;
+        return field(item, 1);
     }
 
     function reading(item as Number) as String {
-        return ITEMS[item][2] as String;
+        return field(item, 2);
     }
 
     function romaji(item as Number) as String {
-        return ITEMS[item][3] as String;
+        return field(item, 3);
     }
 
     function meaning(item as Number) as String {
-        return ITEMS[item][4] as String;
+        return field(item, 4);
+    }
+
+    // Lo que se dibuja con la fuente japonesa: el japonés si la fuente tiene
+    // todos sus caracteres, si no la lectura en kana, o "" si tampoco (entonces
+    // la vista muestra el romaji con la fuente del sistema).
+    function display(item as Number) as String {
+        var text = jp(item);
+        if (drawable(text)) {
+            return text;
+        }
+        text = reading(item);
+        return drawable(text) ? text : "";
+    }
+
+    function drawable(text as String) as Boolean {
+        if (text.length() == 0) {
+            return false;
+        }
+        var chars = text.toCharArray();
+        for (var i = 0; i < chars.size(); i++) {
+            if (JpCharset.CHARS.find(chars[i].toString()) == null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Lo que se pronuncia: la lectura en kana si la hay, para que la voz no
@@ -136,6 +173,13 @@ module JapaneseDeck {
 
     function indicesFor(cat as Number) as Array<Number> {
         var result = [] as Array<Number>;
+        if (cat == CUSTOM) {
+            var cards = JpCustom.cards();
+            for (var i = 0; i < cards.size(); i++) {
+                result.add(JpCustom.BASE + (cards[i][0] as Number));
+            }
+            return result;
+        }
         for (var i = 0; i < ITEMS.size(); i++) {
             if (category(i) == cat) {
                 result.add(i);
